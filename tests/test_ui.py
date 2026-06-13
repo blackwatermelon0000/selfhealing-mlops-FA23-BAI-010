@@ -1,7 +1,7 @@
 import os
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -21,18 +21,28 @@ def test_frontend_sentiment():
 
     try:
         driver.get(BASE_URL)
+
         text_input = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.ID, "text-input"))
-        )
-        text_input.send_keys("A masterpiece of storytelling with complex characters and beautifully crafted prose")
-        driver.find_element(By.ID, "submit-btn").click()
-
-        result = WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located((By.ID, "result-output"))
+            EC.visibility_of_element_located((By.ID, "text-input"))
         )
 
-        output = result.text.strip()
+        text_input.clear()
+        text_input.send_keys(
+            "A masterpiece of storytelling with complex characters and beautifully crafted prose"
+        )
+
+        submit_btn = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.ID, "submit-btn"))
+        )
+        submit_btn.click()
+
+        WebDriverWait(driver, 40).until(
+            lambda d: d.find_element(By.ID, "result-output").text.strip() != ""
+        )
+
+        output = driver.find_element(By.ID, "result-output").text.strip()
+
         assert output != ""
-        assert ("POSITIVE" in output) or ("NEGATIVE" in output) or ("Confidence" in output)
+        assert "POSITIVE" in output.upper() or "NEGATIVE" in output.upper()
     finally:
         driver.quit()
